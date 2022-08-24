@@ -1,0 +1,28 @@
+package main
+
+import (
+	"html/template"
+	"net/http"
+	"time"
+)
+
+type Welcome struct {
+	Sale string
+	Time string
+}
+
+func main() {
+	welcome := Welcome{"Sale Starts Now", time.Now().Format(time.Stamp)}
+	template := template.Must(template.ParseFiles("template/template.html"))
+
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if sale := r.FormValue("sale"); sale != "" {
+			welcome.Sale = sale
+		}
+		if err := template.ExecuteTemplate(w, "template.html", welcome); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
+}
